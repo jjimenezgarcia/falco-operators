@@ -1,0 +1,76 @@
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+"""Unit tests for Falco charm."""
+
+from unittest.mock import PropertyMock, patch
+
+import ops
+import pytest
+from ops import testing
+
+from charm import FalcosidekickCharm
+from workload import Falcosidekick
+
+
+class TestCharm:
+    """Test Charm class."""
+
+    def test_on_falcosidekick_pebble_ready_can_connect(self):
+        """Test on falcosidekick pebble ready event when container can connect."""
+        # Arrange: Set up the mock container to simulate a successful connection
+        ctx = testing.Context(FalcosidekickCharm)
+        # mypy thinks this can_connect argument does not exist.
+        container = testing.Container(Falcosidekick.container_name, can_connect=True)  # type: ignore
+        state_in = testing.State(containers=[container])
+
+        # Act: Create a testing context and run the event
+        state_out = ctx.run(ctx.on.pebble_ready(container=container), state_in)
+
+        # Assert: Verify that the unit status is set to ActiveStatus
+        assert state_out.unit_status == ops.ActiveStatus()
+
+    def test_on_falcosidekick_pebble_ready_cannot_connect(self):
+        """Test on falcosidekick pebble ready event when container cannot connect."""
+        # Arrange: Set up the mock container to simulate a successful connection
+        ctx = testing.Context(FalcosidekickCharm)
+        # mypy thinks this can_connect argument does not exist.
+        container = testing.Container(Falcosidekick.container_name, can_connect=False)  # type: ignore
+        state_in = testing.State(containers=[container])
+
+        # Act: Create a testing context and run the event
+        state_out = ctx.run(ctx.on.pebble_ready(container=container), state_in)
+
+        # Assert: Verify that the unit status is set to ActiveStatus
+        assert state_out.unit_status == ops.WaitingStatus("Workload not ready")
+
+    @patch("charm.Falcosidekick.health", new_callable=PropertyMock)
+    def test_on_falcosidekick_workload_healthy(self, mock_falcosidekick_health):
+        """Test falcosidekick workload is healthy."""
+        # Arrange: Set up the mock container to simulate a successful connection
+        ctx = testing.Context(FalcosidekickCharm)
+        # mypy thinks this can_connect argument does not exist.
+        container = testing.Container(Falcosidekick.container_name, can_connect=True)  # type: ignore
+        mock_falcosidekick_health.return_value = True
+        state_in = testing.State(containers=[container])
+
+        # Act: Create a testing context and run the event
+        state_out = ctx.run(ctx.on.pebble_ready(container=container), state_in)
+
+        # Assert: Verify that the unit status is set to ActiveStatus
+        assert state_out.unit_status == ops.ActiveStatus()
+
+    @patch("charm.Falcosidekick.health", new_callable=PropertyMock)
+    def test_on_falcosidekick_workload_not_healthy(self, mock_falcosidekick_health):
+        """Test falcosidekick workload is not healthy."""
+        # Arrange: Set up the mock container to simulate a successful connection
+        ctx = testing.Context(FalcosidekickCharm)
+        # mypy thinks this can_connect argument does not exist.
+        container = testing.Container(Falcosidekick.container_name, can_connect=True)  # type: ignore
+        mock_falcosidekick_health.return_value = False
+        state_in = testing.State(containers=[container])
+
+        # Act: Create a testing context and run the event
+        # Assert: Verify that the unit status is set to ActiveStatus
+        with pytest.raises(RuntimeError, match="Workload not healthy"):
+            _ = ctx.run(ctx.on.pebble_ready(container=container), state_in)
