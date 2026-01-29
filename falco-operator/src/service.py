@@ -3,8 +3,8 @@
 
 """Falco workload management module."""
 
-import os
 import logging
+import os
 import shutil
 import subprocess
 from pathlib import Path
