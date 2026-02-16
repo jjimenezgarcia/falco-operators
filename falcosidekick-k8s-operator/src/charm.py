@@ -143,12 +143,14 @@ class FalcosidekickCharm(CharmBaseWithState):
 
         try:
             logger.info("Configuring '%s' workload", self.falcosidekick.container_name)
+            cert, _ = self.tls_certificate_requirer._get_assigned_cert_and_key()
             self.falcosidekick.configure(
                 self.state,
                 self.http_endpoint_provider,
                 self.tls_certificate_requirer,
                 self.ingress_requirer,
                 self.prometheus_metrics_endpoint_provider,
+                ca_cert=cert.ca if cert else None
             )
         except InvalidCharmConfigError as e:
             logger.error("%s", e)
