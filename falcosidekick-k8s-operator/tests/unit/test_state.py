@@ -197,5 +197,8 @@ class TestCharmState:
 
         # Assert
         assert state.http_endpoint_config["scheme"] == "https"
-        assert state.http_endpoint_config["ca_cert"] == "---BEGIN CERTIFICATE---\nFAKE-CA\n---END CERTIFICATE---"
+        assert (
+            state.http_endpoint_config["ca_cert"]
+            == "---BEGIN CERTIFICATE---\nFAKE-CA\n---END CERTIFICATE---"
+        )
         assert state.enable_tls is True
