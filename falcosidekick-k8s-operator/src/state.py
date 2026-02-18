@@ -69,7 +69,7 @@ class CharmState(BaseModel):
             cert_requirer = cast(Any, charm).tls_certificate_requirer
             cert, _ = cert_requirer._get_assigned_cert_and_key()
             if cert:
-                ca_cert = cert.ca
+                ca_cert = cert.ca.decode() if isinstance(cert.ca, bytes) else str(cert.ca)
 
             _url = _get_loki_ingress_endpoint(loki_push_api_consumer)
             loki_endpoint = _url.path if _url and _url.path else "/loki/api/v1/push"
